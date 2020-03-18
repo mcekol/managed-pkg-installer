@@ -1,0 +1,78 @@
+<project name="Generic commands" basedir="." xmlns:sf="antlib:com.salesforce">
+
+	<property file="build.properties"/>
+	<property environment="env"/>
+
+	<!-- Ant doesn't like < in replace tokens or values so set a property with < via cdata for reuse later -->
+	<property name="lt"><![CDATA[<]]></property>
+
+	<!--   Download from http://sourceforge.net/projects/ant-contrib/files/ant-contrib/1.0b3/ -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="ant-contrib-1.0b3.jar"/>
+
+	<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+		<classpath>
+			<pathelement location="ant-salesforce.jar" />
+		</classpath>
+	</taskdef>
+
+	<macrodef name="installPackage" description="Installs the given managed package">
+		<attribute name="namespace" description="Namespace of managed package to install."/>
+		<attribute name="version" description="Version of managed package to install."/>
+		<attribute name="packagePassword" description="Password used to install the package. Optional." default=""/>
+		<attribute name="username" description="Salesforce user name."/>
+		<attribute name="password" description="Salesforce password."/>
+		<sequential>
+			<!-- Generate optional <password> element? -->
+			<if><equals arg1="@{packagePassword}" arg2=""/>
+				<then><property name="passwordElement" value=""/></then>
+				<else><property name="passwordElement" value="&lt;password&gt;@{packagePassword}&lt;/password&gt;"/></else>
+			</if>
+			<!-- Generate working folder and metadata files representing the package to install -->
+			<delete dir="${basedir}/installdeploy"/>
+			<mkdir dir="${basedir}/installdeploy"/>
+			<mkdir dir="${basedir}/installdeploy/installedPackages"/>
+			<echo file="${basedir}/installdeploy/package.xml"><![CDATA[
+			<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+				<types>
+					<members>@{namespace}</members>
+					<name>InstalledPackage</name>
+				</types>
+				<version>45.0</version>
+			</Package>]]></echo>
+			<echo file="${basedir}/installdeploy/installedPackages/@{namespace}.installedPackage"><![CDATA[
+			<InstalledPackage xmlns="http://soap.sforce.com/2006/04/metadata">
+				<activateRSS>false</activateRSS>
+				<versionNumber>@{version}</versionNumber>
+				${passwordElement}
+			</InstalledPackage>]]></echo>
+			<sf:deploy deployRoot="${basedir}/installdeploy" username="@{username}" password="@{password}" maxPoll="500" />
+			<delete dir="${basedir}/installdeploy"/>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="enableQuotes" description="Enables the quote settings property - prereq for cscfga">
+		<attribute name="username" description="Salesforce user name."/>
+		<attribute name="password" description="Salesforce password."/>
+		<sequential>
+			<!-- Generate working folder and metadata files representing the package to install -->
+			<delete dir="${basedir}/installdeploy"/>
+			<mkdir dir="${basedir}/installdeploy"/>
+			<mkdir dir="${basedir}/installdeploy/settings"/>
+			<echo file="${basedir}/installdeploy/package.xml"><![CDATA[
+			<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+				<types>
+					<members>Quote</members>
+					<name>Settings</name>
+				</types>
+				<version>45.0</version>
+			</Package>]]></echo>
+			<echo file="${basedir}/installdeploy/settings/Quote.settings"><![CDATA[
+			<QuoteSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+				<enableQuote>true</enableQuote>
+			</QuoteSettings>]]></echo>
+			<sf:deploy deployRoot="${basedir}/installdeploy" username="@{username}" password="@{password}" maxPoll="500" />
+			<delete dir="${basedir}/installdeploy"/>
+		</sequential>
+	</macrodef>
+
+</project>

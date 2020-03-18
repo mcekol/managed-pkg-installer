@@ -1,0 +1,9 @@
+# build.properties
+
+# Salesforce task configuration
+sf.username = sample.username@goes.here
+sf.password = a.password
+sf.token = and.a.token
+sf.serverurl = https://login.salesforce.com
+sf.maxPoll = 20
+sf.api.version = 44.0

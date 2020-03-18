@@ -1,0 +1,9 @@
+<project name="Main Build File" default="install" basedir="." xmlns:sf="antlib:com.salesforce">
+
+	<import file="ant-salesforce.xml"/>
+
+	<target name="install">
+		<enableQuotes username="${sf.username}" password="${sf.password}${sf.token}" />
+		<installPackage namespace="mypackage" version="1.2.3" username="${sf.username}" password="${sf.password}${sf.token}" packagePassword="" />
+	</target>
+</project>
